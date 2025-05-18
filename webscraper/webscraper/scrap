@@ -1,0 +1,76 @@
+import requests
+from bs4 import BeautifulSoup
+import sys
+
+def fetch_content(url: str) -> str:
+    """
+    Fetches the HTML content from the given URL.
+
+    Args:
+        url (str): The URL of the webpage to scrape.
+
+    Returns:
+        str: The raw HTML content of the page.
+    """
+    try:
+        # Send HTTP GET request
+        response = requests.get(url, timeout=10)
+        # Raise exception for HTTP errors
+        response.raise_for_status()
+        return response.text
+    except requests.exceptions.MissingSchema:
+        raise ValueError(f"Invalid URL '{url}'. Include 'http://' or 'https://'.")
+    except requests.exceptions.RequestException as e:
+        # General request exception (network problems, timeout, invalid response, etc.)
+        raise RuntimeError(f"An error occurred while fetching the URL: {e}")
+
+
+def parse_content(html: str) -> str:
+    """
+    Parses the HTML content and extracts the visible text.
+
+    Args:
+        html (str): Raw HTML content of the webpage.
+
+    Returns:
+        str: Cleaned text extracted from the page.
+    """
+    soup = BeautifulSoup(html, 'html.parser')
+
+    # Remove scripts, styles, and comments
+    for element in soup(['script', 'style']):
+        element.decompose()
+
+    # Extract visible text
+    text = soup.get_text(separator=' ', strip=True)
+
+    # Optionally: collapse multiple spaces
+    cleaned = ' '.join(text.split())
+    return cleaned
+
+
+def main():
+    """
+    Main entry point for the web scraper script. Reads a URL from input,
+    fetches the content, parses it, and prints the result.
+    """
+    if len(sys.argv) != 2:
+        print("Usage: python web_scraper.py <URL>")
+        sys.exit(1)
+
+    url = sys.argv[1]
+
+    try:
+        html = fetch_content(url)
+        text = parse_content(html)
+
+        # Output the parsed text to stdout
+        print(text)
+
+    except Exception as e:
+        print(f"Error: {e}")
+        sys.exit(1)
+
+
+if __name__ == '__main__':
+    main()

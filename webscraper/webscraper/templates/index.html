@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Document Generator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 960px;
+        }
+        .card {
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        #loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        #results {
+            display: none;
+        }
+        #error-message {
+            display: none;
+            color: #dc3545;
+            margin: 20px 0;
+        }
+        textarea {
+            min-height: 300px;
+        }
+        .json-display {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.25rem;
+            padding: 1rem;
+            margin-top: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+        .download-btn {
+            min-width: 180px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>
+    <span class="symbol">
+        <img src="/static/images/logo.png" alt="Logo" />
+    </span>
+  DOCUMORPH - AI
+</h1>
+
+
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Input Your Content</h5>
+            </div>
+            <div class="card-body">
+                <form id="document-form">
+                    <div class="mb-3">
+                        <label for="text-input" class="form-label">Paste your text content below:</label>
+                        <textarea id="text-input" name="text" class="form-control" placeholder="Paste your document content here..." required></textarea>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Generate Document</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div id="loading">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Processing your document with AI... This may take a minute.</p>
+        </div>
+
+        <div id="error-message" class="alert alert-danger"></div>
+
+        <div id="results" class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Generated Documents</h5>
+            </div>
+            <div class="card-body">
+                <p>Your document has been generated successfully!</p>
+                <div class="d-flex flex-wrap gap-2 mb-4">
+                    <a id="docx-download" href="#" class="btn btn-success download-btn">Download DOCX</a>
+                    <a id="pdf-download" href="#" class="btn btn-danger download-btn" style="display: none;">Download PDF</a>
+                </div>
+
+                <div class="mt-4">
+                    <h6>Document Structure:</h6>
+                    <div id="structure-display" class="json-display"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('document-form');
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+            const errorMessage = document.getElementById('error-message');
+            const docxDownload = document.getElementById('docx-download');
+            const pdfDownload = document.getElementById('pdf-download');
+            const structureDisplay = document.getElementById('structure-display');
+
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                // Hide previous results and errors
+                results.style.display = 'none';
+                errorMessage.style.display = 'none';
+
+                // Show loading indicator
+                loading.style.display = 'block';
+
+                try {
+                    const formData = new FormData(form);
+                    const response = await fetch('/process', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await response.json();
+
+                    // Hide loading indicator
+                    loading.style.display = 'none';
+
+                    if (response.ok && data.success) {
+                        // Update download links
+                        docxDownload.href = data.docx_url;
+
+                        // Show PDF download button if available
+                        if (data.pdf_url) {
+                            pdfDownload.href = data.pdf_url;
+                            pdfDownload.style.display = 'block';
+                        } else {
+                            pdfDownload.style.display = 'none';
+                        }
+
+                        // Display the structured content as formatted JSON
+                        structureDisplay.textContent = JSON.stringify(data.structured_content, null, 2);
+
+                        // Show results
+                        results.style.display = 'block';
+                    } else {
+                        // Show error message
+                        errorMessage.textContent = data.error || 'An error occurred while processing your request.';
+                        errorMessage.style.display = 'block';
+                    }
+                } catch (error) {
+                    // Hide loading indicator
+                    loading.style.display = 'none';
+
+                    // Show error message
+                    errorMessage.textContent = 'An error occurred while processing your request.';
+                    errorMessage.style.display = 'block';
+                    console.error('Error:', error);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Document Generator</title>
+    <link rel="stylesheet" type="text/css" href="/static/styles.css">
+    <script src="/static/slideshow.js" defer></script>
+</head>
+<body>
+    <!-- Background Slideshow -->
+    <div class="slideshow-container">
+        <img src="/static/images/image1.jpg" class="active" alt="Background 1">
+        <img src="/static/images/image2.jpg" alt="Background 2">
+        <img src="/static/images/image3.jpg" alt="Background 3">
+        <img src="/static/images/image4.jpg" alt="Background 4">
+        <img src="/static/images/image5.jpg" alt="Background 5">
+        <img src="/static/images/image6.jpg" alt="Background 6">
+    </div>
+
+    <!-- Existing Content -->
+    <div class="container">
+        <h1>Smart Document Generator</h1>
+        <div class="card">
+            <h2>Input Your Content</h2>
+            <textarea placeholder="Paste your document content here..."></textarea>
+            <button>Generate Document</button>
+
+
+            <div class="about-section">
+    
+</div>
+
+        </div>
+    </div>
+</body>
+</html>
